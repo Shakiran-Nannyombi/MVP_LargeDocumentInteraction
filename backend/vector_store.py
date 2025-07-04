@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List
 from .text_loader import TextFileManager
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import Chroma
@@ -37,8 +37,23 @@ class VectorStore:
 
     # Function to clear the vector store
     def clear_vector_store(self):
-        collection = self.vector_store._collection
-        collection.delete()
+        try:
+            # Getting all document IDs first for deletion
+            collection = self.vector_store._collection
+            all_docs = collection.get()
+            if all_docs and 'ids' in all_docs and all_docs['ids']:
+                collection.delete(ids=all_docs['ids'])
+                print("Vector store cleared successfully.")
+            else:
+                print("Vector store is already empty.")
+        except Exception as e:
+            print(f"Error clearing vector store: {e}")
+            # Fallback: recreate the vector store
+            try:
+                self.vector_store = self._initialize_vector_store()
+                print("Vector store recreated as fallback.")
+            except Exception as fallback_error:
+                print(f"Fallback failed: {fallback_error}")
 
     # Function to add documents to the vector store
     def add_documents(self, documents: List[Document]) -> bool:
@@ -55,20 +70,19 @@ class VectorStore:
             return False
 
     # Function to search the vector store for similar document objects
-    def search(self, query: str) -> Optional[List[Document]]:
+    def search(self, query: str) -> List[Document]:
         if not query or not query.strip():
-            return None
+            return []
         
         results = self.vector_store.similarity_search(query, k=self.retrieval_k)
         return results
 
-    # Function to get retriever for the vector store
+    # Function to get retriever for the vector store to use in chains
     def get_retriever(self):
         return self.vector_store.as_retriever(search_kwargs={"k": self.retrieval_k})
 
     # Function to load documents from text manager and add them to vector store
     def load_and_index_documents(self, force_reload: bool = False) -> bool:
-        pass
         try:
             # CRUCIAL EFFICIENCY: Check if already indexed
             if not force_reload and self.get_document_count() > 0:
