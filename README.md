@@ -118,8 +118,8 @@ Follow these steps to set up and test the RAG backend on your machine.
 ## Next Steps
 
 *   **Phase 2: Streamlit Frontend**: Build the interactive user interface.
-*   **Phase 3: Enhancements**: Add features like document upload.
-*   **Phase 4 & 5: Docker & Deployment**: Containerize and deploy the app to a VPS.
+*   **Phase 3: Docker**: Containerize 
+*   **Phase 4: Deployment**: Deploy the app to a VPS.
 
 ## Project Structure
 
