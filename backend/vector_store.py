@@ -14,7 +14,7 @@ class VectorStore:
         # Import constants from .env file
         self.chroma_persist_directory = os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma_db")
         self.embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
-        self.retrieval_k = int(os.getenv("RETRIEVAL_K", "4"))
+        self.retrieval_k = int(os.getenv("RETRIEVAL_K", "6"))
 
         # Initialize embedding model
         self.embedding_model = HuggingFaceEmbeddings(

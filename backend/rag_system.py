@@ -12,7 +12,7 @@ class SimpleRAG:
         self.vector_store = VectorStore()
         self.llm = ChatGroq(
             model=os.getenv("LLM_MODEL_NAME", "llama-3.1-8b-instant"),
-            temperature=float(os.getenv("LLM_TEMPERATURE", "0.7")),
+            temperature=float(os.getenv("LLM_TEMPERATURE", "0.3")),
             groq_api_key=os.getenv("GROQ_API_KEY")
         )
         

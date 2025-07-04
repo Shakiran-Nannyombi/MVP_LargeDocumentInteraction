@@ -41,7 +41,7 @@ class TextFileManager:
     
     def load_and_split(self, chunk_size: int = None, chunk_overlap: int = None) -> List[Document]:
         """Load documents and split them into chunks."""
-        chunk_size = chunk_size or int(os.getenv("CHUNK_SIZE", "1000"))
+        chunk_size = chunk_size or int(os.getenv("CHUNK_SIZE", "1500"))
         chunk_overlap = chunk_overlap or int(os.getenv("CHUNK_OVERLAP", "200"))
         
         if chunk_overlap >= chunk_size:
