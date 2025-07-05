@@ -4,13 +4,9 @@ langchain-core
 langchain-community
 langchain-groq
 chromadb
-ollama
 python-dotenv
 tiktoken
-chromadb
 python-dotenv
-langsmith
-sentence-transformers
 torch
 typing-extensions
 pathlib2
