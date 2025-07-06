@@ -1,5 +1,7 @@
 # LARGE TEXT FILE RETRIEVAL RAG MVP
 
+![APP User View](screenshots/app.png)
+
 ## 🚀 Project Overview
 
 Welcome to the **Intelligent Document Query System**!  
