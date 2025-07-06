@@ -127,9 +127,26 @@ with st.sidebar:
         if st.button("Load Chat", key="load_chat_btn"):
             with open(f"chats/{selected_chat}", "r", encoding="utf-8") as f:
                 chat_data = json.load(f)
+            doc_name = chat_data.get("document_name")
+            # If the document is not currently loaded, process it
+            if st.session_state.current_file_name != doc_name and os.path.exists(f"data/{doc_name}"):
+                # Progress bar for loading existing document
+                progress_bar = st.progress(0, text="Loading document...")
+
+                def progress_callback(progress, total):
+                    percent = int(progress / total * 100)
+                    progress_bar.progress(percent, text=f"Loading: {percent}%")
+
+                try:
+                    rag_system.process_document(f"data/{doc_name}", doc_name, progress_callback=progress_callback)
+                    st.session_state.current_file_name = doc_name
+                except Exception as e:
+                    st.error(f"Error loading document: {e}")
+                    st.session_state.current_file_name = None
+
+            # Load messages from chat file
             st.session_state.messages = [HumanMessage(content=m["content"]) if m["role"]=="HumanMessage" else AIMessage(content=m["content"]) for m in chat_data["messages"]]
-            st.session_state.current_file_name = chat_data.get("document_name")
-            st.success(f"Loaded chat for document: {st.session_state.current_file_name}")
+            st.success(f"Loaded chat for document: {doc_name}")
             st.rerun()
         if st.button("Delete Chat", key="delete_chat_btn"):
             os.remove(f"chats/{selected_chat}")
