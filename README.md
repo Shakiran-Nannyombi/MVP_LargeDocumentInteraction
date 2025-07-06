@@ -31,20 +31,7 @@ RAG supercharges Large Language Models (LLMs) by giving them access to external,
 
 ---
 
-## ✨ Features
-
-- **Chat with any large `.txt` document**
-- **Fast, chunked document processing with progress bar**
-- **Persistent chat history (save/load/delete)**
-- **Multiple document support (auto context switching)**
-- **Modern, dark-themed UI (customizable)**
-- **Runs locally or on a VPS**
-- **ChromaDB for vector search (runs in Docker)**
-- **Supports multiple embedding providers (Mistral, Azure, etc.)**
-
----
-
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 LLM_LargeDocumentInteraction/
@@ -73,7 +60,17 @@ LLM_LargeDocumentInteraction/
 
 ---
 
-## ⚡ Quickstart
+## Features
+
+- **Chat with any large `.txt` document**
+- **Fast, chunked document processing with progress bar**
+- **Persistent chat history (save/load/delete)**
+- **Runs locally or on a VPS**
+- **ChromaDB for vector search (runs in Docker)**
+
+---
+
+## HOW TO SET-UP
 
 ### 1. **Clone the repo and install dependencies**
 ```bash
@@ -101,11 +98,11 @@ docker run -p 8000:8000 -v ./chroma_db:/chroma/chroma chromadb/chroma:latest
 ```bash
 streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 ```
-Visit [http://localhost:8501](http://localhost:8501) (or your VPS IP/domain).
+Visit [http://localhost:8501](http://localhost:8501) (or on your own VPS IP/domain).
 
 ---
 
-## 📝 Usage
+## HOW TO USE MY MVP
 
 - **Upload a `.txt` file** in the main area.
 - **Watch the progress bar** as your document is processed.
@@ -116,45 +113,22 @@ Visit [http://localhost:8501](http://localhost:8501) (or your VPS IP/domain).
 
 ---
 
-## 🛠️ Deployment
+## DeploymentS
 
 - **VPS:**  
   - Run the app as above.
-  - Use Nginx as a reverse proxy for your domain (see sample config in repo).
+  - Use Nginx as a reverse proxy for your domain.
 - **ChromaDB:**  
   - Runs in Docker for easy persistence and isolation.
 - **Environment:**  
   - All secrets and API keys are managed via `.env`.
-
----
-
-## 📸 Screenshots
-
-![RAG Pipeline Steps](screenshots/RAG_steps.png)
-![RAG Query Process](screenshots/RAG_process.png)
-
----
-
-## 🧠 Tech Stack
-
-- **Python 3.9+**
-- **Streamlit** (UI)
-- **ChromaDB** (vector database, Dockerized)
-- **LangChain** (RAG pipeline)
-- **MistralAI, Groq, Azure OpenAI** (embeddings/LLM)
-- **Docker** (for ChromaDB)
-- **Nginx** (for production deployments)
+  - There is an `.env.example` to guide you how to set your own keys
 
 ---
 
 ## 🙏 Credits
 
-- Built by Kiran (and AI pair-programming!)
-- Powered by open-source and cloud LLMs
+- Built by Kiran
+- Referenced from Langchain, Chroma and Streamlit Documentations
 
----
-
-## 📄 License
-
-MIT (or your preferred license)
 
