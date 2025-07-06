@@ -35,6 +35,7 @@ RAG supercharges Large Language Models (LLMs) by giving them access to external,
 
 ## Project Structure
 
+```
 LLM_LargeDocumentInteraction/
 │
 ├── app.py                # Streamlit app (main UI and logic)
@@ -57,6 +58,7 @@ LLM_LargeDocumentInteraction/
 │   └── RAG_process.png
 │
 └── .venv/                # Python virtual environment (not tracked)
+```
 
 ---
 
