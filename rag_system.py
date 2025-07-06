@@ -1,10 +1,20 @@
 import chromadb
 from langchain_groq import ChatGroq
-from langchain_openai import AzureOpenAIEmbeddings
+from langchain_mistralai import MistralAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from chromadb import Documents, EmbeddingFunction, Embeddings
 from langchain_community.document_loaders import TextLoader
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from datetime import datetime
+import os
+import time
+
+class LangchainEmbeddingFunction(EmbeddingFunction):
+    def __init__(self, langchain_embeddings):
+        self.langchain_embeddings = langchain_embeddings
+
+    def __call__(self, input: Documents) -> Embeddings:
+        return self.langchain_embeddings.embed_documents(input)
 
 class RAGSystem:
     def __init__(self, config: dict):
@@ -18,10 +28,8 @@ class RAGSystem:
             raise ValueError("GROQ_API_KEY not found in config.")
         if not self.config.get("GROQ_MODEL"):
             raise ValueError("GROQ_MODEL not found in config.")
-        azure_api_key = self.config.get("AZURE_OPENAI_API_KEY")
-        azure_endpoint = self.config.get("AZURE_OPENAI_ENDPOINT")
-        azure_deployment_name = self.config.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
-        azure_api_version = self.config.get("AZURE_OPENAI_API_VERSION")
+        if not self.config.get("MISTRALAI_API_KEY"):
+            raise ValueError("MISTRALAI_API_KEY not found in config.")
 
         # Initialize the LLM (Groq)
         self.llm = ChatGroq(
@@ -38,22 +46,16 @@ class RAGSystem:
         )
 
         # Initialize Embeddings Model
-        azure_api_key = self.config.get("AZURE_OPENAI_API_KEY")
-        azure_endpoint = self.config.get("AZURE_OPENAI_ENDPOINT")
-        azure_deployment_name = self.config.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
-        azure_api_version = self.config.get("AZURE_OPENAI_API_VERSION")
-
-        if all([azure_api_key, azure_endpoint, azure_deployment_name, azure_api_version]):
-            # Use Azure OpenAI Embeddings
-            print("Using Azure OpenAI Embeddings")
-            self.embeddings = AzureOpenAIEmbeddings(
-                azure_deployment=azure_deployment_name,
-                openai_api_key=azure_api_key,
-                azure_endpoint=azure_endpoint,
-                api_version=azure_api_version,
-            )
+        # Set MistralAI API key from config or environment
+        if "MISTRALAI_API_KEY" in self.config:
+            self.mistral_api_key = self.config["MISTRALAI_API_KEY"]
         else:
-            raise ValueError("No embedding configuration found. Please provide either Azure OpenAI or HuggingFace embedding configuration.")
+            raise ValueError("MISTRALAI_API_KEY not found in config or environment.")
+
+        # Use MistralAI Embeddings
+        print("Using MistralAI Embeddings")
+        self.embeddings = MistralAIEmbeddings(model="mistral-embed", api_key=self.mistral_api_key)
+        self.chroma_embedding_function = LangchainEmbeddingFunction(self.embeddings)
 
         # Initialize ChromaDB client
         self.chroma_client = chromadb.HttpClient(
@@ -76,10 +78,10 @@ class RAGSystem:
         """Gets or creates the ChromaDB collection."""
         return self.chroma_client.get_or_create_collection(
             self.collection_name,
-            embedding_function=None # None because embeddings are generated outside ChromaDB client
+            embedding_function=self.chroma_embedding_function
         )
 
-    def process_document(self, file_path: str, file_name: str):
+    def process_document(self, file_path: str, file_name: str, progress_callback=None):
         """
         Loads, chunks, embeds, and stores a document in ChromaDB.
         Existing chunks associated with the same file_name will be replaced.
@@ -92,32 +94,49 @@ class RAGSystem:
         )
         documents = loader.lazy_load()
         all_splits = self.text_splitter.split_documents(documents)
+        print(f"Total chunks: {len(all_splits)}")
 
-        # Deleting all existing chunks for this file to implement "replace" functionality
+        # Delete ALL existing chunks for ANY file (full reset for new file)
         try:
-            # First, find IDs of documents associated with this file name
-            results = self.collection.get(where={"source_file": file_name}, include=['ids'])
-            ids_to_delete = results['ids']
-            
-            if ids_to_delete:
-                self.collection.delete(ids=ids_to_delete)
-                print(f"Removed {len(ids_to_delete)} old chunks for '{file_name}'.")
+            all_ids = self.collection.get(include=["ids"])['ids']
+            if all_ids:
+                self.collection.delete(ids=all_ids)
+                print(f"Removed {len(all_ids)} old chunks from collection.")
         except Exception as e:
-            print(f"Warning: Could not delete old chunks for '{file_name}'. Error: {e}")
+            print(f"Warning: Could not delete old chunks. Error: {e}")
 
         # intializing lists to hold new data
         new_ids = []
         new_documents = []
-        new_embeddings = []
         new_metadatas = []
 
-        # Processing new chunks for each document
+        # Prepare all texts for batch embedding
+        texts = []
         for i, doc in enumerate(all_splits):
+            print(f"Preparing chunk {i+1}/{len(all_splits)} for '{file_name}'...")
             doc_id = f"{file_name}_{i}"
             new_ids.append(doc_id)
             new_documents.append(doc.page_content)
-            new_embeddings.append(self.embeddings.embed_query(doc.page_content))
             new_metadatas.append({"source_file": file_name, "chunk_index": i, **doc.metadata})
+            texts.append(doc.page_content)
+
+        # Batch embed all chunks at once (batch size 64)
+        def batch(iterable, n=64):
+            l = len(iterable)
+            for ndx in range(0, l, n):
+                yield iterable[ndx:min(ndx + n, l)]
+
+        all_embeddings = []
+        start = time.time()
+        total_batches = (len(texts) + 63) // 64
+        for batch_num, batch_texts in enumerate(batch(texts, 64)):
+            print(f"Embedding batch {batch_num+1} ({len(batch_texts)} chunks)...")
+            all_embeddings.extend(self.embeddings.embed_documents(batch_texts))
+            # Progress callback is used to update the progress of the document processing
+            if progress_callback:
+                progress_callback(batch_num + 1, total_batches)
+        print(f"Embedding took {time.time() - start:.2f} seconds")
+        new_embeddings = all_embeddings
 
         # Adding new chunks to the collection
         if new_ids:
@@ -128,9 +147,11 @@ class RAGSystem:
                 metadatas=new_metadatas
             )
             print(f"Successfully added {len(new_ids)} new chunks for '{file_name}'.")
+            print(f"Collection count after add: {self.collection.count()}")
         else:
             print(f"No content to add for document '{file_name}'.")
-
+        # Track current file name for search
+        self.current_file_name = file_name
 
     # Semantic Search Functionality
     def search_document(self, query: str, top_k: int = 3) -> list[str]:
@@ -141,8 +162,10 @@ class RAGSystem:
             results = self.collection.query(
                 query_texts=[query],
                 n_results=top_k,
+                where={"source_file": getattr(self, 'current_file_name', None)},
                 include=['documents']
             )
+            print(f"Search results: {results}")
             return results['documents'][0] if results['documents'] else []
         except Exception as e:
             print(f"Error during document search: {e}")
