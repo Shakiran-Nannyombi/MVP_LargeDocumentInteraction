@@ -115,7 +115,7 @@ Visit [http://localhost:8501](http://localhost:8501) (or on your own VPS IP/doma
 
 ---
 
-## DeploymentS
+## Deployments
 
 - **VPS:**  
   - Run the app as above.
