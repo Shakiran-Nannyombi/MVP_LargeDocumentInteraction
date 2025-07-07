@@ -58,11 +58,15 @@ class RAGSystem:
         self.chroma_embedding_function = LangchainEmbeddingFunction(self.embeddings)
 
         # Initialize ChromaDB client
-        self.chroma_client = chromadb.HttpClient(
-            host=self.config.get("CHROMA_HOST", "localhost"), 
-            port=int(self.config.get("CHROMA_PORT", 8000)), 
-        )
-        self.collection_name = "uploads_base" 
+        if self.config.get("USE_MEMORY_CHROMA", False):
+            print("Using in-memory ChromaDB for deployment")
+            self.chroma_client = chromadb.Client()
+        else:
+            self.chroma_client = chromadb.HttpClient(
+                host=self.config.get("CHROMA_HOST", "localhost"), 
+                port=int(self.config.get("CHROMA_PORT", 8000)), 
+            )
+        self.collection_name = "uploads" 
         self._ensure_chroma_connection()
         self.collection = self._get_or_create_collection()
         print(f"ChromaDB collection '{self.collection_name}' ready.")

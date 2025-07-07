@@ -6,8 +6,20 @@ from rag_system import RAGSystem
 import json
 from datetime import datetime
 
-# Loading environment variables from .env file
-config = dotenv_values(".env")
+# Loading environment variables from .env file and Render
+if os.path.exists(".env"):
+    config = dotenv_values(".env")
+else:
+    # Environment variables for Render deployment
+    config = {
+        "GROQ_API_KEY": os.getenv("GROQ_API_KEY"),
+        "GROQ_MODEL": os.getenv("GROQ_MODEL", "llama3-8b-8192"),
+        "MISTRALAI_API_KEY": os.getenv("MISTRALAI_API_KEY"),
+        "USE_MEMORY_CHROMA": os.getenv("USE_MEMORY_CHROMA", "true").lower() == "true",
+        "LANGSMITH_TRACING": os.getenv("LANGSMITH_TRACING", "false"),
+        "LANGSMITH_API_KEY": os.getenv("LANGSMITH_API_KEY", ""),
+        "LANGSMITH_PROJECT": os.getenv("LANGSMITH_PROJECT", "RAG-Capstone-MVP"),
+    }
 
 # LangSmith tracing configuration
 os.environ["LANGCHAIN_TRACING_V2"] = config.get("LANGSMITH_TRACING", "false") # Changed default to "false" - only enable if you have API key and want to use it
@@ -16,7 +28,7 @@ os.environ["LANGCHAIN_PROJECT"] = config.get("LANGSMITH_PROJECT", "RAG-Capstone-
 
 # Page configuration
 st.set_page_config(
-    page_title="MVP", # Changed title for clarity
+    page_title="MVP", 
     page_icon="📚",
     layout="wide"
 )
