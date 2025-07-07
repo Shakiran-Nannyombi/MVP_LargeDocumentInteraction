@@ -9,7 +9,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: docker-file
+      dockerfile: Dockerfile
     volumes:
       - ./data:/app/data
       - ./chroma_db:/app/chroma_db
