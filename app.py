@@ -21,10 +21,6 @@ else:
         "LANGSMITH_PROJECT": os.getenv("LANGSMITH_PROJECT", "RAG-Capstone-MVP"),
     }
 
-# LangSmith tracing configuration
-os.environ["LANGCHAIN_TRACING_V2"] = config.get("LANGSMITH_TRACING", "false") # Changed default to "false" - only enable if you have API key and want to use it
-os.environ["LANGCHAIN_API_KEY"] = config.get("LANGSMITH_API_KEY", "") 
-os.environ["LANGCHAIN_PROJECT"] = config.get("LANGSMITH_PROJECT", "RAG-Capstone-MVP") # Added project name, good practice
 
 # Page configuration
 st.set_page_config(
