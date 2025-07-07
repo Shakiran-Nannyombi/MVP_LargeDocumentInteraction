@@ -172,13 +172,12 @@ class RAGSystem:
             return []
 
     # Response Generation according to user message and chat history
-    def generate_response(self, user_message: str, chat_history: list, system_instruction_content: str) -> str:
-        
+    def generate_response(self, user_message: str, chat_history: list, SystemMessage: str) -> str:
         relevant_chunks = self.search_document(user_message)
         
         # Takes the system message and enhances it with relevant chunks
         # If no relevant chunks are found, it uses the system instruction content as is
-        enhanced_system_prompt = system_instruction_content
+        enhanced_system_prompt = SystemMessage
         
         if relevant_chunks:
             context = "\n\n".join(relevant_chunks)
