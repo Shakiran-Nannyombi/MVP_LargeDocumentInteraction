@@ -10,8 +10,6 @@
 Welcome to the **Intelligent Document Query System**!  
 This project lets you chat with large text documents using Retrieval Augmented Generation (RAG). Upload a `.txt` file, ask questions, and get answers grounded in your document's content—no more hallucinations, just real context.
 
----
-
 ## 🤖 What is RAG? (Retrieval Augmented Generation)
 
 RAG supercharges Large Language Models (LLMs) by giving them access to external, relevant information, making responses more accurate and factual.
@@ -68,45 +66,6 @@ LLM_LargeDocumentInteraction/
     └── ...               # Virtual environment files
 ```
 
----
-
-## Key File Descriptions
-
-### Core Application Files
-- **`app.py`** - Main Streamlit application with UI, file upload, chat interface, and session management
-- **`rag_system.py`** - RAG backend containing document processing, embedding generation, vector search, and response generation
-- **`requirements.txt`** - Python package dependencies for the project
-
-### Configuration Files
-- **`docker-compose.yml`** - Docker orchestration for ChromaDB and Streamlit app services
-- **`Dockerfile`** - Container configuration for the Streamlit application
-- **`.env`** - Environment variables including API keys (GROQ, MistralAI, HuggingFace tokens)
-- **`.env.example`** - Template showing required environment variables
-
-### Data Directories
-- **`chroma_db/`** - Persistent ChromaDB vector database storage
-- **`data/`** - Temporary storage for uploaded document files
-- **`chats/`** - JSON files containing saved chat histories with document associations
-
-### Documentation
-- **`screenshots/`** - Visual documentation showing app interface and RAG process diagrams
-- **`README.md`** - Comprehensive project documentation
-
----
-
-## Features
-
-- **Chat with any large `.txt` document**
-- **Fast, chunked document processing with progress bar**
-- **Persistent chat history (save/load/delete)**
-- **Runs locally or on a VPS**
-- **ChromaDB for vector search (runs in Docker)**
-- **Environment-based configuration management**
-- **Docker containerization for easy deployment**
-- **Real-time document processing with progress tracking**
-
----
-
 ## HOW TO SET-UP
 
 ### 1. **Clone the repo and install dependencies**
@@ -137,20 +96,6 @@ MISTRALAI_API_KEY=your-mistral-key
 
 Visit [http://localhost:8502](http://localhost:8502) (or on your own VPS IP/domain).
 
----
-
-## Deployments
-
-- **VPS:**  
-  - Run the app as above.
-  - Use Nginx as a reverse proxy for your domain.
-- **ChromaDB:**  
-  - Runs in Docker for easy persistence and isolation.
-- **Environment:**  
-  - All secrets and API keys are managed via `.env`.
-  - There is an `.env.example` to guide you how to set your own keys
-
----
 
 ## 🚀 Production Deployment (VPS/Cloud)
 
@@ -166,6 +111,17 @@ Visit [http://localhost:8502](http://localhost:8502) (or on your own VPS IP/doma
 - **Troubleshooting:**
   - Check logs: `docker logs <container_name>`
   - Restart: `docker compose restart` or `sudo systemctl reload nginx`
+
+## Features
+
+- **Chat with any large `.txt` document**
+- **Fast, chunked document processing with progress bar**
+- **Persistent chat history (save/load/delete)**
+- **Runs locally or on a VPS**
+- **ChromaDB for vector search (runs in Docker)**
+- **Environment-based configuration management**
+- **Docker containerization for easy deployment**
+- **Real-time document processing with progress tracking**
 
 ---
 
