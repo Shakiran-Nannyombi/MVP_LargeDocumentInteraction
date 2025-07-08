@@ -1,29 +1,23 @@
 services:
   chroma:
     image: chromadb/chroma:latest
-    volumes:
-      - ./chroma_db:/data  
     ports:
       - "8083:8000"
-  
+    volumes:
+      - ./chroma_db:/data
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - GROQ_API_KEY=your-groq-key
+      - GROQ_MODEL=your-groq-model
+      - MISTRALAI_API_KEY=your-mistral-key
+      - CHROMA_HOST=localhost
+      - CHROMA_PORT=8000
+    ports:
+      - "8502:8502"
     volumes:
       - ./data:/app/data
       - ./chroma_db:/app/chroma_db
-    ports:
-      - "8502:8501"
-    env_file:
-      - .env
-    environment:
-      - USE_MEMORY_CHROMA=${USE_MEMORY_CHROMA}
-      - CHROMA_API_IMPL=${CHROMA_API_IMPL}
-      - CHROMA_HOST=${CHROMA_HOST}
-      - CHROMA_PORT=${CHROMA_PORT}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - LANGSERVER_API_KEY=${LANGSERVER_API_KEY}
-
-   

@@ -58,13 +58,20 @@ class RAGSystem:
         self.chroma_embedding_function = LangchainEmbeddingFunction(self.embeddings)
 
         # Initialize ChromaDB client
+        # Initialize ChromaDB client with default host and port
         self.chroma_client = chromadb.HttpClient(
-            host=self.config.get("CHROMA_HOST", "localhost"), 
-            port=int(self.config.get("CHROMA_PORT", 8000)), 
+            host='localhost',
+            port=8000
         )
-        self.collection_name = "uploads" 
+
+        self.collection_name = "uploads"
+        self.collection = self.chroma_client.get_or_create_collection(
+            name=self.collection_name,
+            embedding_function=self.chroma_embedding_function,
+            metadata={"hnsw:space": "cosine"}  # Ensures vector search uses cosine similarity
+        )
+
         self._ensure_chroma_connection()
-        self.collection = self._get_or_create_collection()
         print(f"ChromaDB collection '{self.collection_name}' ready.")
 
     def _ensure_chroma_connection(self):
@@ -73,13 +80,7 @@ class RAGSystem:
             self.chroma_client.heartbeat()
         except Exception as e:
             raise ConnectionError(f"ChromaDB server is not ready or accessible. Please ensure it's running. Error: {e}")
-
-    def _get_or_create_collection(self):
-        """Gets or creates the ChromaDB collection."""
-        return self.chroma_client.get_or_create_collection(
-            self.collection_name,
-            embedding_function=self.chroma_embedding_function
-        )
+        
 
     def process_document(self, file_path: str, file_name: str, progress_callback=None):
         """
@@ -96,12 +97,13 @@ class RAGSystem:
         all_splits = self.text_splitter.split_documents(documents)
         print(f"Total chunks: {len(all_splits)}")
 
-        # Delete ALL existing chunks for ANY file (full reset for new file)
+        # full reset for new file
         try:
-            all_ids = self.collection.get(include=["ids"])['ids']
-            if all_ids:
-                self.collection.delete(ids=all_ids)
-                print(f"Removed {len(all_ids)} old chunks from collection.")
+            # Get all existing documents to clear the collection
+            all_data = self.collection.get()
+            if all_data['ids']:
+                self.collection.delete(ids=all_data['ids'])
+                print(f"Removed {len(all_data['ids'])} old chunks from collection.")
         except Exception as e:
             print(f"Warning: Could not delete old chunks. Error: {e}")
 

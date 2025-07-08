@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "app.py"]
+CMD ["streamlit", "run", "app.py", "--server.port=8502"]
