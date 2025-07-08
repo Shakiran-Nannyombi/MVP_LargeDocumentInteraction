@@ -4,7 +4,7 @@ from langchain_mistralai import MistralAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from langchain_community.document_loaders import TextLoader
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage # Keep this import!
 from datetime import datetime
 import os
 import time
@@ -174,12 +174,14 @@ class RAGSystem:
             return []
 
     # Response Generation according to user message and chat history
-    def generate_response(self, user_message: str, chat_history: list, SystemMessage: str) -> str:
+    # RENAMED PARAMETER 'SystemMessage' to 'system_message_content'
+    def generate_response(self, user_message: str, chat_history: list, system_message_content: str) -> str:
         relevant_chunks = self.search_document(user_message)
         
         # Takes the system message and enhances it with relevant chunks
         # If no relevant chunks are found, it uses the system instruction content as is
-        enhanced_system_prompt = SystemMessage
+        # USED RENAMED PARAMETER HERE
+        enhanced_system_prompt = system_message_content
         
         if relevant_chunks:
             context = "\n\n".join(relevant_chunks)
@@ -194,6 +196,7 @@ class RAGSystem:
         # Prepare messages for LLM invocation
         # history passed here does *not* include the initial SystemMessage
         # It includes HumanMessage and AIMessage objects
+        # Now, `SystemMessage` correctly refers to the imported class
         messages_for_llm = [SystemMessage(content=enhanced_system_prompt)] + chat_history + [HumanMessage(content=user_message)]
         
         # If no relevant chunks, just use the system message and user message

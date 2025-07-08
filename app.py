@@ -67,16 +67,20 @@ if "messages" not in st.session_state:
 if "current_file_name" not in st.session_state:
     st.session_state.current_file_name = None # To track which file is currently processed
 
-# System message to provide context to the LLM 
-SystemMessage = """
+# Your SystemMessage variable
+SystemMessage_content = """ 
 You are a helpful assistant that can answer questions about large documents.
 Be able to reply to greetings, provide summaries, and answer specific questions about the content of the document.
 You should always respond in a friendly and informative manner.
+You should be able to respond to gestures like "hello", "hi", "hey", and similar greetings.
+And aslo appreciation like thank you, thanks, etc.
+If user says ok and bye, you should end the conversation politely.
+You should be able to handle questions about the document's content, such as "What is the main topic of the document?", "Can you summarize this document?", or "What are the key points
 You can summarize, extract information, and provide insights based on the content of the document.
 Your responses should be based on the provided document context and the conversation history.
 Your responses should be concise, accurate, and directly relevant to the user's queries, grounded in the provided document content.
 If you are unsure about something or the information is not in the document, state that you don't have enough information.
-"""
+""" # Renamed from SystemMessage to SystemMessage_content for clarity
 
 # --- Sidebar ---
 with st.sidebar:
@@ -213,29 +217,58 @@ for message in st.session_state.messages:
 if user_query := st.chat_input("Enter your question about the document..."):
     if not st.session_state.current_file_name:
         st.warning("Please upload a document first to start asking questions.")
-        st.stop() # Prevent further processing without a document
+        st.stop()
 
-    # Add user message to conversation history
     st.session_state.messages.append(HumanMessage(content=user_query))
     
-    # Display user message immediately
     with st.chat_message("user"):
         st.write(user_query)
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            # Call the RAGSystem to generate the response
             try:
+                # Debugging: Print the messages being sent to the LLM
+                # Build messages_for_llm locally for inspection
+                relevant_chunks_for_debug = rag_system.search_document(user_query) # Re-run search for debug output
+                
+                enhanced_system_prompt_for_debug = SystemMessage_content
+                if relevant_chunks_for_debug:
+                    context_for_debug = "\n\n".join(relevant_chunks_for_debug)
+                    enhanced_system_prompt_for_debug += f"\n\nHere is relevant information from the knowledge base:\n{context_for_debug}\n\nUse this information to answer the user's question. Prioritize information from the knowledge base."
+
+                needs_time_for_debug = any(word in user_query.lower() for word in ['time', 'when', 'date', 'today', 'now'])
+                if needs_time_for_debug:
+                    current_time_for_debug = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    enhanced_system_prompt_for_debug = f"Current time: {current_time_for_debug}\n{enhanced_system_prompt_for_debug}"
+
+                messages_to_send_to_llm = [SystemMessage(content=enhanced_system_prompt_for_debug)] + st.session_state.messages[:-1] + [HumanMessage(content=user_query)]
+                
+                print("\n--- DEBUG: Messages sent to LLM ---")
+                for msg_obj in messages_to_send_to_llm:
+                    print(f"Role: {msg_obj.__class__.__name__}, Content Length: {len(msg_obj.content)}")
+                    # Optionally, print full content for shorter messages for more detail
+                    if len(msg_obj.content) < 500: # Limit to avoid overwhelming terminal
+                        print(f"  Content: {msg_obj.content[:500]}...") 
+                    else:
+                        print(f"  Content (truncated): {msg_obj.content[:500]}...")
+                print("--- END DEBUG ---\n")
+
                 response_content = rag_system.generate_response(
                     user_query,
-                    st.session_state.messages[:-1], # Pass all previous messages (excluding the current user_query)
-                    SystemMessage # Changed from system_instruction_content to SystemMessage
+                    st.session_state.messages[:-1],
+                    SystemMessage_content # Use the renamed variable here
                 )
                 ai_message = AIMessage(content=response_content)
                 st.write(ai_message.content)
-                st.session_state.messages.append(ai_message) # Add AI response to history
+                st.session_state.messages.append(ai_message)
             except Exception as e:
-                st.error(f"An error occurred while generating response: {e}")
+                # THIS IS THE CRITICAL LINE: print the actual error to the terminal
+                print(f"\n--- ERROR IN LLM INVOCATION ---")
+                import traceback
+                traceback.print_exc() # This prints the full traceback to the terminal
+                print(f"Error details: {e}")
+                print(f"--- END ERROR ---\n")
+                st.error(f"An error occurred while generating response. Please check the terminal for details. Error: {e}")
                 st.session_state.messages.append(AIMessage(content="Sorry, I encountered an error and couldn't generate a response."))
     
-    st.rerun() # Rerun the app to display the new messages
+    st.rerun()
