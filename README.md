@@ -139,17 +139,6 @@ Visit [http://localhost:8502](http://localhost:8502) (or on your own VPS IP/doma
 
 ---
 
-## HOW TO USE MY MVP
-
-- **Upload a `.txt` file** in the main area.
-- **Watch the progress bar** as your document is processed.
-- **Chat with your document**—ask questions, get summaries, extract info.
-- **Save your chat** (with document association) using the sidebar.
-- **Load or delete previous chats** anytime.
-- **Switch documents**—the assistant always uses the correct context.
-
----
-
 ## Deployments
 
 - **VPS:**  
