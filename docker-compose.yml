@@ -1,11 +1,10 @@
-
 services:
   chroma:
     image: chromadb/chroma:latest
     volumes:
       - ./chroma_db:/data  
     ports:
-      - "8081:8000"
+      - "8083:8000"
   
   app:
     build:
@@ -16,4 +15,15 @@ services:
       - ./chroma_db:/app/chroma_db
     ports:
       - "8502:8501"
+    env_file:
+      - .env
+    environment:
+      - USE_MEMORY_CHROMA=${USE_MEMORY_CHROMA}
+      - CHROMA_API_IMPL=${CHROMA_API_IMPL}
+      - CHROMA_HOST=${CHROMA_HOST}
+      - CHROMA_PORT=${CHROMA_PORT}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - LANGSERVER_API_KEY=${LANGSERVER_API_KEY}
+
    
