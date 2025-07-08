@@ -8,9 +8,14 @@ from datetime import datetime
 
 # Loading environment variables from .env file and Render
 if os.path.exists(".env"):
+    # Load from .env for local development
     config = dotenv_values(".env")
+    # Set defaults for CHROMA_HOST/PORT if not in .env, for local testing without Docker Compose
+    # Although, better to run with Docker Compose even locally for consistency
+    config.setdefault("CHROMA_HOST", "localhost")
+    config.setdefault("CHROMA_PORT", "8000")
 else:
-    # Environment variables for Render deployment
+    # Environment variables for Render deployment or other prod env
     config = {
         "GROQ_API_KEY": os.getenv("GROQ_API_KEY"),
         "GROQ_MODEL": os.getenv("GROQ_MODEL", "llama3-8b-8192"),
@@ -19,8 +24,11 @@ else:
         "LANGSMITH_TRACING": os.getenv("LANGSMITH_TRACING", "false"),
         "LANGSMITH_API_KEY": os.getenv("LANGSMITH_API_KEY", ""),
         "LANGSMITH_PROJECT": os.getenv("LANGSMITH_PROJECT", "RAG-Capstone-MVP"),
+        # Add ChromaDB host/port here from environment variables too, 
+        # so RAGSystem can pick them up if running without a .env file directly
+        "CHROMA_HOST": os.getenv("CHROMA_HOST", "localhost"), # Default to localhost if not set
+        "CHROMA_PORT": os.getenv("CHROMA_PORT", "8000") # Default to 8000 if not set
     }
-
 
 # Page configuration
 st.set_page_config(
@@ -80,7 +88,8 @@ You can summarize, extract information, and provide insights based on the conten
 Your responses should be based on the provided document context and the conversation history.
 Your responses should be concise, accurate, and directly relevant to the user's queries, grounded in the provided document content.
 If you are unsure about something or the information is not in the document, state that you don't have enough information.
-""" # Renamed from SystemMessage to SystemMessage_content for clarity
+""" 
+
 
 # --- Sidebar ---
 with st.sidebar:
@@ -227,45 +236,19 @@ if user_query := st.chat_input("Enter your question about the document..."):
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                # Debugging: Print the messages being sent to the LLM
-                # Build messages_for_llm locally for inspection
-                relevant_chunks_for_debug = rag_system.search_document(user_query) # Re-run search for debug output
-                
-                enhanced_system_prompt_for_debug = SystemMessage_content
-                if relevant_chunks_for_debug:
-                    context_for_debug = "\n\n".join(relevant_chunks_for_debug)
-                    enhanced_system_prompt_for_debug += f"\n\nHere is relevant information from the knowledge base:\n{context_for_debug}\n\nUse this information to answer the user's question. Prioritize information from the knowledge base."
-
-                needs_time_for_debug = any(word in user_query.lower() for word in ['time', 'when', 'date', 'today', 'now'])
-                if needs_time_for_debug:
-                    current_time_for_debug = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    enhanced_system_prompt_for_debug = f"Current time: {current_time_for_debug}\n{enhanced_system_prompt_for_debug}"
-
-                messages_to_send_to_llm = [SystemMessage(content=enhanced_system_prompt_for_debug)] + st.session_state.messages[:-1] + [HumanMessage(content=user_query)]
-                
-                print("\n--- DEBUG: Messages sent to LLM ---")
-                for msg_obj in messages_to_send_to_llm:
-                    print(f"Role: {msg_obj.__class__.__name__}, Content Length: {len(msg_obj.content)}")
-                    # Optionally, print full content for shorter messages for more detail
-                    if len(msg_obj.content) < 500: # Limit to avoid overwhelming terminal
-                        print(f"  Content: {msg_obj.content[:500]}...") 
-                    else:
-                        print(f"  Content (truncated): {msg_obj.content[:500]}...")
-                print("--- END DEBUG ---\n")
-
                 response_content = rag_system.generate_response(
                     user_query,
                     st.session_state.messages[:-1],
-                    SystemMessage_content # Use the renamed variable here
+                    SystemMessage_content
                 )
                 ai_message = AIMessage(content=response_content)
                 st.write(ai_message.content)
                 st.session_state.messages.append(ai_message)
             except Exception as e:
-                # THIS IS THE CRITICAL LINE: print the actual error to the terminal
+                # Print full error details to terminal
                 print(f"\n--- ERROR IN LLM INVOCATION ---")
                 import traceback
-                traceback.print_exc() # This prints the full traceback to the terminal
+                traceback.print_exc()
                 print(f"Error details: {e}")
                 print(f"--- END ERROR ---\n")
                 st.error(f"An error occurred while generating response. Please check the terminal for details. Error: {e}")

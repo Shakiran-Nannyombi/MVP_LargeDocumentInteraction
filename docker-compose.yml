@@ -1,6 +1,7 @@
 services:
   chroma:
     image: chromadb/chroma:latest
+    container_name: rag_chroma_server
     ports:
       - "8083:8000"
     volumes:
@@ -10,14 +11,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: rag_streamlit_app
     environment:
       - GROQ_API_KEY=your-groq-key
       - GROQ_MODEL=your-groq-model
       - MISTRALAI_API_KEY=your-mistral-key
-      - CHROMA_HOST=localhost
+      - CHROMA_HOST=chroma
       - CHROMA_PORT=8000
     ports:
       - "8502:8502"
     volumes:
       - ./data:/app/data
-      - ./chroma_db:/app/chroma_db

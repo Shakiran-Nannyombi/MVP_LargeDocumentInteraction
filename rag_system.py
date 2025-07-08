@@ -4,17 +4,19 @@ from langchain_mistralai import MistralAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from langchain_community.document_loaders import TextLoader
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage # Keep this import!
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from datetime import datetime
 import os
 import time
 
-class LangchainEmbeddingFunction(EmbeddingFunction):
-    def __init__(self, langchain_embeddings):
-        self.langchain_embeddings = langchain_embeddings
 
+# Adapter class that wraps Langchain embeddings to work with ChromaDB's embedding function interface.
+class LangchainEmbeddingFunction(EmbeddingFunction):
+    def __init__(self, embeddings):
+        self.embeddings = embeddings
+    
     def __call__(self, input: Documents) -> Embeddings:
-        return self.langchain_embeddings.embed_documents(input)
+        return self.embeddings.embed_documents(input)
 
 class RAGSystem:
     def __init__(self, config: dict):
@@ -46,29 +48,32 @@ class RAGSystem:
         )
 
         # Initialize Embeddings Model
-        # Set MistralAI API key from config or environment
         if "MISTRALAI_API_KEY" in self.config:
             self.mistral_api_key = self.config["MISTRALAI_API_KEY"]
         else:
             raise ValueError("MISTRALAI_API_KEY not found in config or environment.")
 
-        # Use MistralAI Embeddings
         print("Using MistralAI Embeddings")
         self.embeddings = MistralAIEmbeddings(model="mistral-embed", api_key=self.mistral_api_key)
         self.chroma_embedding_function = LangchainEmbeddingFunction(self.embeddings)
 
         # Initialize ChromaDB client
-        # Initialize ChromaDB client with default host and port
+        # Get ChromaDB host and port from environment variables
+        chroma_host = os.getenv("CHROMA_HOST", "localhost") 
+        chroma_port = int(os.getenv("CHROMA_PORT", "8000")) 
+
+        print(f"Connecting to ChromaDB at {chroma_host}:{chroma_port}")
+
         self.chroma_client = chromadb.HttpClient(
-            host='localhost',
-            port=8000
+            host=chroma_host,
+            port=chroma_port
         )
 
         self.collection_name = "uploads"
         self.collection = self.chroma_client.get_or_create_collection(
             name=self.collection_name,
             embedding_function=self.chroma_embedding_function,
-            metadata={"hnsw:space": "cosine"}  # Ensures vector search uses cosine similarity
+            metadata={"hnsw:space": "cosine"}
         )
 
         self._ensure_chroma_connection()
