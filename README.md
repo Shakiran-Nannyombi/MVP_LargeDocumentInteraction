@@ -99,7 +99,7 @@ Visit [http://localhost:8502](http://localhost:8502) (or on your own VPS IP/doma
 
 ## 🚀 Production Deployment (VPS/Cloud)
 
-- **Environment:** Deployed on a VPS (e.g., AWS EC2, Ubuntu 22.04) using Docker Compose.
+- **Environment:** Deployed on a VPS using AWS EC2 and Ubuntu 22.04 plus Docker Compose.
 - **Reverse Proxy & HTTPS:** Nginx is set up as a reverse proxy with Certbot for HTTPS.
 - **Domain:** App is accessible via a custom domain (e.g., `https://largetextmvp.duckdns.org/`).
 - **Key Steps:**
