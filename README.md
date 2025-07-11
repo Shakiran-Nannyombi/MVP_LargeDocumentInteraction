@@ -101,7 +101,7 @@ Visit [http://localhost:8502](http://localhost:8502) (or on your own VPS IP/doma
 
 - **Environment:** Deployed on a VPS using AWS EC2 and Ubuntu 22.04 plus Docker Compose.
 - **Reverse Proxy & HTTPS:** Nginx is set up as a reverse proxy with Certbot for HTTPS.
-- **Domain:** App is accessible via a custom domain (e.g., `https://largetextmvp.duckdns.org/`).
+- **Domain:** App is accessible via my custom domain (e.g., `https://largetextmvp.duckdns.org/`).
 - **Key Steps:**
   1. Open ports 80, 443 (Nginx), and 8502 (Streamlit) in your VPS firewall/security group.
   2. Copy project files and `.env` to the server (e.g., with `scp`).
@@ -115,13 +115,12 @@ Visit [http://localhost:8502](http://localhost:8502) (or on your own VPS IP/doma
 ## Features
 
 - **Chat with any large `.txt` document**
-- **Fast, chunked document processing with progress bar**
+- **Fast chunked document and processing with progress bar**
 - **Persistent chat history (save/load/delete)**
 - **Runs locally or on a VPS**
 - **ChromaDB for vector search (runs in Docker)**
 - **Environment-based configuration management**
 - **Docker containerization for easy deployment**
-- **Real-time document processing with progress tracking**
 
 ---
 
